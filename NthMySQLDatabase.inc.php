@@ -80,7 +80,7 @@
             	$this->addDatabaseError($sqlQuery, $this->error);
             	return false;	
 			} else {
-				return new NthMySQLResultSet($result, $sqlQuery);	
+				return $this->makeResultSet($result, $sqlQuery);	
 			}
         }
         
@@ -104,7 +104,7 @@
 					while(parent::next_result());	
 				}
 				
-				return new NthMySQLResultSet($result, $sqlQuery);	
+				return $this->makeResultSet($result, $sqlQuery);	
 			}
         }
 
@@ -139,6 +139,22 @@
             $q = "SELECT LAST_INSERT_ID() as lastInsertId;";
             if($r = $this->query($q)) { $lastInsertId = $r->firstValue(); }
             return $lastInsertId;
+        }
+        
+        
+        
+        
+        ////////////////////////////////////////////////////////////////////////
+         
+        /**
+         * Return a wrapped instance of the result.
+         *
+         * @param object $result  A MySQLi_Result
+         * @param object $sqlQuery  The query used to obtain $result
+         * @return mixed  The wrapped result
+         */ 
+        protected function makeResultSet($result, $sqlQuery) {
+            return new NthMySQLResultSet($result, $sqlQuery);	
         }
 
 	}
