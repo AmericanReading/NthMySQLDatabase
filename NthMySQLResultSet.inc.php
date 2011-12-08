@@ -225,16 +225,6 @@
             
         }
 
-
-
-        /**
-        * Returns the number of records in this result set.
-        * 
-        */
-        public function numResults() {
-            return $this->numResults;
-        }
-
         /**
         * Returns the value of the first field of the first row of this record set.
         * 
@@ -245,44 +235,6 @@
             $this->result->data_seek($this->position);
             return $data[0];
         }
-
-        /**
-        * Returns the entire record set as an associative array.
-        * This can consume a lot of memory if the record set is large.
-        * 
-        */
-        public function assocArray() {
-            //Rewind to the beginning of the result set.
-            $this->result->data_seek(0);
-
-            $a = array();
-
-            while($r = $this->result->fetch_assoc()) { $a[] = $r; }
-
-            return $a;
-        }
-
-        /**
-        * Return the first row of the result set as an associative array.
-        *
-        */
-        public function assocArraySingle() {
-            //Rewind to the beginning of the result set.
-            $this->result->data_seek(0);
-
-            $r = $this->result->fetch_assoc();
-
-            return $r;
-        }
-
-
-
-
-        
-        
-    
-        
-
     
     }
 

@@ -140,12 +140,7 @@
             if($r = $this->query($q)) { $lastInsertId = $r->firstValue(); }
             return $lastInsertId;
         }
-        
-        
-        
-        
-        ////////////////////////////////////////////////////////////////////////
-         
+                 
         /**
          * Return a wrapped instance of the result.
          *
