@@ -15,21 +15,16 @@
 										//array( 0 => 'databaseError', ...)
 
 		/**
-		* Takes a dbConnectionArray and connects to an MySQL database.
-		* 
-		* dbConnectionArray = array(
-		* 	"host" => "localhost",
-		* 	"username" => "someuser",
-		* 	"password" => "somepassword",
-		* 	"database" => "somedatabasename"
-		* );
+		* Connects to an MySQL database.
 		* 
 		* @param mixed $dbConnectionArray
 		* @return NthMySQLDatabase
 		*/
-		public function __construct($dbConnectionArray) {
+		public function __construct($host, $username=null, $password=null,
+                $dbname=null, $port=null, $socket=null) {
+		
 			//Call the parent mysqli constructor.
-            parent::__construct($dbConnectionArray["host"], $dbConnectionArray["username"], $dbConnectionArray["password"], $dbConnectionArray["database"]);
+            parent::__construct($host, $username, $password, $dbname, $port, $socket);
 
             //Check to see if there was an error connecting.
             if ($this->connect_errno) {
