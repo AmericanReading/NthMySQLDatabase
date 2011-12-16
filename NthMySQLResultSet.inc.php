@@ -1,19 +1,39 @@
 <?php
 
+    /**
+     * @package NthMySQLDatabase
+     */
+    
     class NthMySQLResultSet implements ArrayAccess, Countable, SeekableIterator {
 
-        protected $result;		//Stores the MySQLi result resource.
-        private $position;		//The currently selected row in the result set.
-        private $numResults;	//How many results were returned?
-        private $checkSum;		//An MD5 checksum of the SQL query used to generate this result set.
+        /**
+         * @var object MySQLi result resource.
+         */
+        protected $result;
+        
+        /**
+         * @var int The currently selected row in the result set
+         */
+        private $position;
+        
+        /**
+         * @var int How many results were returned?
+         */
+        private $numResults;
+        
+        /**
+         * @var string An MD5 checksum of the SQL query used to generate this result set.
+         */
+        private $checkSum;
+        
 
         /**
-        * Instantiate a new NthMySQLResultSet given an MySQLi result resource.
-        * 
-        * @param mixed $result The result resource from MySQLi
-        * @param string $sqlQuery The SQL query used to generate the result set.
-        * @return NthMySQLResultSet
-        */
+         * Instantiate a new NthMySQLResultSet given an MySQLi result resource.
+         * 
+         * @param mixed $result The result resource from MySQLi
+         * @param string $sqlQuery The SQL query used to generate the result set.
+         * @return NthMySQLResultSet
+         */
         public function __construct(&$result, $sqlQuery) {
             $this->result =& $result;
             $this->numResults = $this->result->num_rows;
@@ -22,26 +42,26 @@
         }
 
         /**
-        * When the NthMySQLResultSet object is destroyed, make sure to free the result resource.
-        * 
-        */
+         * When the NthMySQLResultSet object is destroyed, make sure to free
+         * the result resource. 
+         */
         public function __destruct() {
             $this->result->free();
         }
 
 
 
-        ////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////
         // !Implemented Abstract Methods from Interfaces
-        // -------------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         // ArrayAccess
         // Countable
         // SeekableIterator 
-        ////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////
         
-        ////////////////////////////////////////////////////////////////////////////
+        ////////////////////////////////////////////////////////////////////////
         // !ArrayAccess methods
-        // -------------------------------------------------------------------------
+        // ---------------------------------------------------------------------
         // ::offsetExists()
         // ::offsetGet()
         // ::offsetSet()
@@ -73,10 +93,20 @@
          * @param int $offset
          * @return array
          */
-        public function offsetGet($offset) 
-        {
-            $this->seek($offset);
-            return $this->fetch();
+        public function offsetGet($offset) {
+            
+            // Seek to the passed position.
+            $this->seekPointer($offset);
+            
+            // Fetch the data. This will advance the pointer.
+            $data = $this->fetch();
+
+            // Return to the original position.
+            $this->seekPointer($this->position);
+            
+            // Return the first column.
+            return $data;
+            
         }
     
         /**
@@ -85,8 +115,7 @@
          * @param mixed $offset
          * @param mixed $value
          */
-        public function offsetSet($offset, $value) 
-        {
+        public function offsetSet($offset, $value) {
             throw new Exception('Cannot alter row. ResultSet rows are read only.');
         }
         
@@ -95,8 +124,7 @@
          * 
          * @param mixed $offset
          */
-        public function offsetUnset($offset) 
-        {
+        public function offsetUnset($offset) {
             throw new Exception('Cannot unset row. ResultSet rows are read only.');
         }
         
@@ -113,7 +141,7 @@
          * @return int
          */
         public function count() {
-            return $this->numResults();
+            return $this->numResults;
         }
         
         
@@ -121,55 +149,55 @@
         ////////////////////////////////////////////////////////////////////////////
         // !SeekableIterator methods 
         // -------------------------------------------------------------------------
-        // ::seek()
-        // ::rewind()
-        // ::current()
         // ::key()
+        // ::current()
+        // ::valid()
         // ::next()
-        // ::valid() 
+        // ::rewind()
+        // ::seek()
         
         /**
-        * The current result position.
-        * Supports the Iterator interface.
-        * 
-        */
+         * The current result position.
+         * 
+         * @return int
+         */
         public function key() {
             return $this->position;
         }
 
         /**
-        * The row stored at the current position, expressed as an associative array.
-        * Supports the Iterator interface.
-        * 
-        */
+         * Fetch the row at the current position.
+         *
+         * This method called the fetch() method, so overriding fetch() in a
+         * subclass will change functionality of this method as well.
+         *
+         * @return array
+         */
         public function current() {
-            $this->result->data_seek($this->position);
+            $this->seekPointer($this->position);
             return $this->fetch();
         }
 
         /**
-        * Checks if the current position is valid.
-        * Supports the Iterator interface.
-        * 
-        */
+         * Checks if the current position is valid.
+         * 
+         * @return bool
+         */
         public function valid() {
             return ($this->position < $this->numResults);
         }
-
+        
         /**
-        * Increments the current position.
-        * Supports the Iterator interface.
-        * 
-        */
+         * Increments the current position.
+         */
         public function next() {
             ++$this->position;
         }
 
         /**
-        * Moves the position back to the start of the record set.
-        * Supports the Iterator interface.
-        * 
-        */
+         * Moves the position back to the start of the record set.
+         * Supports the Iterator interface.
+         */
         public function rewind() {
             $this->position = 0;
         }
@@ -180,12 +208,7 @@
          * @param int $offset
          */
         public function seek($offset) {
-        
-            if ($this->offsetExists($offset)) {
-                $this->position = $offset;
-                $this->result->data_seek($offset);    
-            }
-            
+            $this->position = $offset;
         }
 
 
@@ -193,6 +216,7 @@
         ////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////
         ////////////////////////////////////////////////////////////////////////
+        
         
         
         /**
@@ -209,7 +233,7 @@
         }
         
         /**
-         * Fetch all records and return an associative arra.
+         * Fetch all records and return an array.
          * 
          * @return array
          */
@@ -226,14 +250,31 @@
         }
 
         /**
-        * Returns the value of the first field of the first row of this record set.
-        * 
-        */
-        public function firstValue() {
-            $this->result->data_seek(0);
+         * Returns the value of the first field of the first row.
+         * 
+         * @return string
+         */
+        public function fetchFirstValue() {
+        
+            // Seek to the first position.
+            $this->seekPointer(0);
+            
+            // Fetch the data. This will advance the pointer.
             $data = $this->result->fetch_row();
-            $this->result->data_seek($this->position);
+            
+            // Return to the original position.
+            $this->seek($this->position);
+            
+            // Return the first column.
             return $data[0];
+
+        }
+        
+        /**
+         * Seek the result's pointer to the given offset.
+         */
+        protected function seekPointer($offset) {
+            $this->result->data_seek($offset);
         }
     
     }
