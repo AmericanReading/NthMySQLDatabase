@@ -4,7 +4,7 @@
      * @package NthMySQLDatabase
      */
      
-    require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'NthMySQLResultSet.inc.php');
+    require_once(dirname(__FILE__) . '/NthMySQLResultSet.inc.php');
     
     class NthMySQLConnectException extends Exception {
     	public function errorMessage() {
